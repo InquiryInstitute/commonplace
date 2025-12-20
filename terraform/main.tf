@@ -37,9 +37,9 @@ resource "google_sql_database_instance" "ghost_db" {
     disk_autoresize   = true
 
     backup_configuration {
-      enabled                        = true
-      start_time                     = "03:00"
-      point_in_time_recovery_enabled = true
+      enabled            = true
+      start_time         = "03:00"
+      binary_log_enabled = true
     }
 
     ip_configuration {
@@ -208,28 +208,28 @@ resource "google_cloud_run_service_iam_member" "public_access" {
 resource "google_secret_manager_secret" "db_password" {
   secret_id = "db-password"
   replication {
-    automatic = true
+    auto {}
   }
 }
 
 resource "google_secret_manager_secret" "mail_user" {
   secret_id = "mail-user"
   replication {
-    automatic = true
+    auto {}
   }
 }
 
 resource "google_secret_manager_secret" "mail_password" {
   secret_id = "mail-password"
   replication {
-    automatic = true
+    auto {}
   }
 }
 
 resource "google_secret_manager_secret" "gcs_keyfile" {
   secret_id = "gcs-keyfile"
   replication {
-    automatic = true
+    auto {}
   }
 }
 
