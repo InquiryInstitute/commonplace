@@ -1,0 +1,42 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+terraform.tfvars
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Secrets
+*.pem
+*.key
+gcs-keyfile.json
+*-keyfile.json
+
+# Node modules
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+logs/
+
+# Build artifacts
+dist/
+build/
+*.tar.gz
