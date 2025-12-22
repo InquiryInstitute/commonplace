@@ -26,3 +26,10 @@ variable "cloud_run_url" {
   type        = string
   default     = ""
 }
+
+variable "gcp_access_token" {
+  description = "GCP access token (optional, for authentication)"
+  type        = string
+  default     = ""
+  sensitive   = true
+}
