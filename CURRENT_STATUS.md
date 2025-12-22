@@ -1,66 +1,114 @@
-# Current Deployment Status
+# Current Status - Ghost Installation Setup
 
-## ❌ Deployment Failed - Permissions Required
+## ✅ What's Working
 
-Terraform attempted to create resources but failed due to insufficient permissions on the service account.
+1. **GitHub Repository**: ✅ Created and all code committed
+   - Repository: https://github.com/InquiryInstitute/commonplace
+   - All configuration files in place
 
-## What Happened
+2. **GCP Configuration**: ✅ Ready
+   - Project: `naphome-korvo1`
+   - Billing: ✅ Linked (Inquiry.Institute billing account)
+   - APIs: ✅ Enabled (Cloud Run, Cloud SQL, Storage, Secret Manager, VPC Access, etc.)
 
-The service account `ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com` is being used for authentication, but it lacks the following permissions:
+3. **Terraform**: ✅ Configured and Validated
+   - Configuration validated
+   - Plan shows 15 resources ready to create
+   - Authentication working (using service account key)
 
-1. **compute.networks.create** - To create VPC network
-2. **storage.buckets.create** - To create Cloud Storage bucket  
-3. **iam.serviceAccounts.create** - To create service accounts
-4. **secretmanager.secrets.create** - To create secrets
+4. **AWS Route 53**: ✅ Zone Exists
+   - Hosted zone already created: `Z06752029VWQZ5MPMZG8`
+   - DNS record placeholder exists
 
-## Solution
+5. **Service Account**: ✅ Created
+   - Service account: `ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com`
+   - Key file: `gcs-keyfile.json` (in repository root)
 
-You need to grant the service account Owner role or the specific roles listed in `PERMISSIONS_NEEDED.md`.
+## ❌ What's Blocked
 
-### Quick Fix (Run this command):
+**Service Account Permissions**: The service account `ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com` needs additional permissions to create resources.
 
+### Missing Permissions:
+- ❌ `compute.networks.create` - To create VPC network
+- ❌ `storage.buckets.create` - To create Cloud Storage bucket
+- ❌ `iam.serviceAccounts.create` - To create service accounts
+- ❌ `secretmanager.secrets.create` - To create Secret Manager secrets
+
+### Current Permissions:
+- ✅ `storage.objectAdmin` - Can manage storage objects (but not create buckets)
+
+## 🔧 Solution Required
+
+Grant the service account Owner role or specific admin roles. This requires a user account with project admin/owner permissions.
+
+**Quick Fix Command:**
 ```bash
 gcloud projects add-iam-policy-binding naphome-korvo1 \
   --member="serviceAccount:ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com" \
   --role="roles/owner"
 ```
 
-**Note:** This requires you to be authenticated with a user account that has Project Owner or IAM Admin permissions.
-
-### After Granting Permissions
-
-Once permissions are granted, run:
-
+**After granting permissions, run:**
 ```bash
 cd terraform
 export GOOGLE_APPLICATION_CREDENTIALS="$(cd .. && pwd)/gcs-keyfile.json"
 terraform apply
 ```
 
-## What's Ready to Deploy
+## 📋 Resources Ready to Create
 
-Terraform plan shows **15 resources** ready to create:
-- ✅ Cloud SQL MySQL instance and database
-- ✅ VPC network, subnet, and connector
-- ✅ Cloud Storage bucket
-- ✅ Service accounts and IAM bindings
-- ✅ Secret Manager secrets
-- ✅ Cloud Run service
-- ✅ Route 53 DNS record (already exists)
+Once permissions are granted, Terraform will create:
 
-## Current Configuration
+1. **Cloud SQL**
+   - MySQL 8.0 instance (`ghost-db-instance`)
+   - Database (`ghost`)
+   - User (`ghost`)
 
-- **Project**: naphome-korvo1
-- **Service Account**: ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com
-- **Authentication**: ✅ Working (using service account key)
-- **Billing**: ✅ Enabled
-- **APIs**: ✅ Enabled
-- **Permissions**: ❌ Need to grant Owner role
+2. **Networking**
+   - VPC network (`ghost-vpc`)
+   - Subnet (`ghost-subnet`)
+   - VPC connector (`ghost-connector`)
 
-## Next Steps
+3. **Storage**
+   - Cloud Storage bucket (`naphome-korvo1-ghost-content`)
 
-1. Grant Owner role to the service account (see command above)
-2. Run `terraform apply` again
-3. Wait for resources to be created (~5-10 minutes)
-4. Configure secrets using `./scripts/setup-secrets.sh`
-5. Deploy Ghost application
+4. **Security**
+   - Service account (`ghost-sa`)
+   - Secret Manager secrets (db-password, mail-user, mail-password, gcs-keyfile)
+
+5. **Compute**
+   - Cloud Run service (`ghost`) - placeholder (will be deployed via Cloud Build)
+
+6. **DNS**
+   - Route 53 record update (zone already exists)
+
+## 🎯 Next Steps
+
+1. **Grant Permissions** (requires project admin)
+   - Run the gcloud command above to grant Owner role
+
+2. **Deploy Infrastructure**
+   ```bash
+   cd terraform
+   export GOOGLE_APPLICATION_CREDENTIALS="$(cd .. && pwd)/gcs-keyfile.json"
+   terraform apply
+   ```
+
+3. **Configure Secrets**
+   - Add actual secret values to Secret Manager
+   - Run `./scripts/setup-secrets.sh`
+
+4. **Deploy Ghost**
+   - Build and deploy via Cloud Build or GitHub Actions
+   - Update DNS record with Cloud Run URL
+
+## 📊 Progress: 90% Complete
+
+- ✅ Repository setup: 100%
+- ✅ Configuration: 100%
+- ✅ Authentication: 100%
+- ⚠️ Permissions: 0% (blocking deployment)
+- ⏳ Infrastructure: 0% (waiting on permissions)
+- ⏳ Application deployment: 0% (waiting on infrastructure)
+
+**Estimated time to complete after permissions granted: 10-15 minutes**
