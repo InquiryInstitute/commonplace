@@ -27,16 +27,16 @@ The following APIs require billing to be enabled:
 - Cloud Build API
 - Compute Engine API
 
-**Action**: Enable billing for project `naphome-korvo1` in GCP Console, then re-run:
+**Action**: Enable billing for project `institute-481516` in GCP Console, then re-run:
 ```bash
-export GCP_PROJECT_ID=naphome-korvo1
+export GCP_PROJECT_ID=institute-481516
 ./scripts/enable-gcp-apis.sh
 ```
 
 ### 2. Configure Terraform Variables
 Create `terraform/terraform.tfvars`:
 ```hcl
-gcp_project_id = "naphome-korvo1"
+gcp_project_id = "institute-481516"
 gcp_region     = "us-central1"
 aws_region     = "us-east-1"
 db_password    = "your-secure-database-password"
@@ -70,7 +70,7 @@ terraform apply
 
 ### 6. Configure GitHub Secrets
 Add the following secrets in GitHub repository settings:
-- `GCP_PROJECT_ID`: naphome-korvo1
+- `GCP_PROJECT_ID`: institute-481516
 - `GCP_SA_KEY`: Service account JSON key (create with script below)
 - `CLOUDSQL_CONNECTION_NAME`: (from Terraform output)
 - `VPC_CONNECTOR`: (from Terraform output)
@@ -84,27 +84,27 @@ Add the following secrets in GitHub repository settings:
 ```bash
 gcloud iam service-accounts create github-actions \
   --display-name="GitHub Actions Service Account" \
-  --project=naphome-korvo1
+  --project=institute-481516
 
-gcloud projects add-iam-policy-binding naphome-korvo1 \
-  --member="serviceAccount:github-actions@naphome-korvo1.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding institute-481516 \
+  --member="serviceAccount:github-actions@institute-481516.iam.gserviceaccount.com" \
   --role="roles/cloudbuild.builds.editor"
 
-gcloud projects add-iam-policy-binding naphome-korvo1 \
-  --member="serviceAccount:github-actions@naphome-korvo1.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding institute-481516 \
+  --member="serviceAccount:github-actions@institute-481516.iam.gserviceaccount.com" \
   --role="roles/run.admin"
 
-gcloud projects add-iam-policy-binding naphome-korvo1 \
-  --member="serviceAccount:github-actions@naphome-korvo1.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding institute-481516 \
+  --member="serviceAccount:github-actions@institute-481516.iam.gserviceaccount.com" \
   --role="roles/iam.serviceAccountUser"
 
-gcloud projects add-iam-policy-binding naphome-korvo1 \
-  --member="serviceAccount:github-actions@naphome-korvo1.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding institute-481516 \
+  --member="serviceAccount:github-actions@institute-481516.iam.gserviceaccount.com" \
   --role="roles/secretmanager.secretAccessor"
 
 gcloud iam service-accounts keys create github-actions-key.json \
-  --iam-account=github-actions@naphome-korvo1.iam.gserviceaccount.com \
-  --project=naphome-korvo1
+  --iam-account=github-actions@institute-481516.iam.gserviceaccount.com \
+  --project=institute-481516
 
 # Copy the contents of github-actions-key.json to GitHub secret GCP_SA_KEY
 cat github-actions-key.json
@@ -132,7 +132,7 @@ CLOUD_RUN_URL=$(gcloud run services describe ghost --region=us-central1 --format
 
 ## Current Project Configuration
 
-- **GCP Project**: naphome-korvo1
+- **GCP Project**: institute-481516
 - **GitHub Repo**: https://github.com/InquiryInstitute/commonplace
 - **Domain**: commonplace.inquiry.institute
 

@@ -30,6 +30,8 @@ resource "google_sql_database_instance" "ghost_db" {
   database_version = "MYSQL_8_0"
   region           = var.gcp_region
 
+  depends_on = [google_service_networking_connection.private_vpc_connection]
+
   settings {
     tier              = "db-f1-micro"
     availability_type = "REGIONAL"
@@ -77,6 +79,22 @@ resource "google_compute_subnetwork" "ghost_subnet" {
   ip_cidr_range = "10.0.0.0/24"
   region        = var.gcp_region
   network       = google_compute_network.ghost_vpc.id
+}
+
+# Private IP address range for Cloud SQL
+resource "google_compute_global_address" "private_ip_address" {
+  name          = "ghost-private-ip"
+  purpose       = "VPC_PEERING"
+  address_type  = "INTERNAL"
+  prefix_length = 16
+  network       = google_compute_network.ghost_vpc.id
+}
+
+# Private services connection for Cloud SQL
+resource "google_service_networking_connection" "private_vpc_connection" {
+  network                 = google_compute_network.ghost_vpc.id
+  service                 = "servicenetworking.googleapis.com"
+  reserved_peering_ranges = [google_compute_global_address.private_ip_address.name]
 }
 
 # VPC Connector for Cloud Run

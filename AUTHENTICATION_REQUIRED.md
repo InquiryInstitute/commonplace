@@ -9,7 +9,7 @@ Run these commands in your terminal:
 ```bash
 # Set the account
 gcloud config set account custodian@inquiry.institute
-gcloud config set project naphome-korvo1
+gcloud config set project institute-481516
 
 # Authenticate the account (will open browser)
 gcloud auth login custodian@inquiry.institute
@@ -33,19 +33,19 @@ If you prefer to use a service account (recommended for CI/CD):
 ```bash
 gcloud iam service-accounts create terraform-sa \
   --display-name="Terraform Service Account" \
-  --project=naphome-korvo1
+  --project=institute-481516
 
 # Grant necessary roles
-gcloud projects add-iam-policy-binding naphome-korvo1 \
-  --member="serviceAccount:terraform-sa@naphome-korvo1.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding institute-481516 \
+  --member="serviceAccount:terraform-sa@institute-481516.iam.gserviceaccount.com" \
   --role="roles/owner"
 ```
 
 2. Create and download key:
 ```bash
 gcloud iam service-accounts keys create terraform-key.json \
-  --iam-account=terraform-sa@naphome-korvo1.iam.gserviceaccount.com \
-  --project=naphome-korvo1
+  --iam-account=terraform-sa@institute-481516.iam.gserviceaccount.com \
+  --project=institute-481516
 ```
 
 3. Use with Terraform:

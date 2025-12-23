@@ -4,7 +4,7 @@
 
 set -e
 
-PROJECT_ID=${GCP_PROJECT_ID:-"naphome-korvo1"}
+PROJECT_ID=${GCP_PROJECT_ID:-"institute-481516"}
 SERVICE_ACCOUNT="ghost-gcs-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 
 echo "Granting permissions to service account: $SERVICE_ACCOUNT"

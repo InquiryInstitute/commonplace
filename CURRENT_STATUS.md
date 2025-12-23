@@ -7,7 +7,7 @@
    - All configuration files in place
 
 2. **GCP Configuration**: ✅ Ready
-   - Project: `naphome-korvo1`
+   - Project: `institute-481516`
    - Billing: ✅ Linked (Inquiry.Institute billing account)
    - APIs: ✅ Enabled (Cloud Run, Cloud SQL, Storage, Secret Manager, VPC Access, etc.)
 
@@ -21,12 +21,12 @@
    - DNS record placeholder exists
 
 5. **Service Account**: ✅ Created
-   - Service account: `ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com`
+   - Service account: `ghost-gcs-sa@institute-481516.iam.gserviceaccount.com`
    - Key file: `gcs-keyfile.json` (in repository root)
 
 ## ❌ What's Blocked
 
-**Service Account Permissions**: The service account `ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com` needs additional permissions to create resources.
+**Service Account Permissions**: The service account `ghost-gcs-sa@institute-481516.iam.gserviceaccount.com` needs additional permissions to create resources.
 
 ### Missing Permissions:
 - ❌ `compute.networks.create` - To create VPC network
@@ -43,8 +43,8 @@ Grant the service account Owner role or specific admin roles. This requires a us
 
 **Quick Fix Command:**
 ```bash
-gcloud projects add-iam-policy-binding naphome-korvo1 \
-  --member="serviceAccount:ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding institute-481516 \
+  --member="serviceAccount:ghost-gcs-sa@institute-481516.iam.gserviceaccount.com" \
   --role="roles/owner"
 ```
 
@@ -70,7 +70,7 @@ Once permissions are granted, Terraform will create:
    - VPC connector (`ghost-connector`)
 
 3. **Storage**
-   - Cloud Storage bucket (`naphome-korvo1-ghost-content`)
+   - Cloud Storage bucket (`institute-481516-ghost-content`)
 
 4. **Security**
    - Service account (`ghost-sa`)

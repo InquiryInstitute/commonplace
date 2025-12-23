@@ -2,7 +2,7 @@
 
 ## Issue
 
-The service account `ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com` needs additional permissions to create infrastructure resources.
+The service account `ghost-gcs-sa@institute-481516.iam.gserviceaccount.com` needs additional permissions to create infrastructure resources.
 
 ## Quick Fix (Choose One Method)
 
@@ -13,7 +13,7 @@ The service account `ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com` needs 
 ```bash
 # Authenticate if needed
 gcloud auth login
-gcloud config set project naphome-korvo1
+gcloud config set project institute-481516
 
 # Run the permission grant script
 ./scripts/grant-permissions.sh
@@ -21,15 +21,15 @@ gcloud config set project naphome-korvo1
 
 Or manually:
 ```bash
-gcloud projects add-iam-policy-binding naphome-korvo1 \
-  --member="serviceAccount:ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com" \
+gcloud projects add-iam-policy-binding institute-481516 \
+  --member="serviceAccount:ghost-gcs-sa@institute-481516.iam.gserviceaccount.com" \
   --role="roles/owner"
 ```
 
 ### Method 2: Using GCP Console
 
-1. Go to: https://console.cloud.google.com/iam-admin/iam?project=naphome-korvo1
-2. Find service account: `ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com`
+1. Go to: https://console.cloud.google.com/iam-admin/iam?project=institute-481516
+2. Find service account: `ghost-gcs-sa@institute-481516.iam.gserviceaccount.com`
 3. Click the pencil icon to edit
 4. Click "ADD ANOTHER ROLE"
 5. Select "Owner" role
@@ -40,7 +40,7 @@ gcloud projects add-iam-policy-binding naphome-korvo1 \
 If you prefer not to grant Owner role, grant these specific roles:
 
 ```bash
-PROJECT_ID="naphome-korvo1"
+PROJECT_ID="institute-481516"
 SA="ghost-gcs-sa@${PROJECT_ID}.iam.gserviceaccount.com"
 
 gcloud projects add-iam-policy-binding $PROJECT_ID \
@@ -87,9 +87,9 @@ terraform apply
 To verify permissions were granted:
 
 ```bash
-gcloud projects get-iam-policy naphome-korvo1 \
+gcloud projects get-iam-policy institute-481516 \
   --flatten="bindings[].members" \
-  --filter="bindings.members:ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com" \
+  --filter="bindings.members:ghost-gcs-sa@institute-481516.iam.gserviceaccount.com" \
   --format="table(bindings.role)"
 ```
 

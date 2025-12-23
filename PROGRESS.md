@@ -23,7 +23,7 @@
      - Route 53 hosted zone and DNS record
 
 3. **GCP Service Account**
-   - ✅ GCS service account created: `ghost-gcs-sa@naphome-korvo1.iam.gserviceaccount.com`
+   - ✅ GCS service account created: `ghost-gcs-sa@institute-481516.iam.gserviceaccount.com`
    - ✅ Service account keyfile created: `gcs-keyfile.json`
    - ✅ IAM permissions granted (Storage Object Admin)
 
@@ -33,14 +33,14 @@
    - ✅ User: dan-syzygyx
 
 5. **Project Configuration**
-   - ✅ GCP Project: `naphome-korvo1`
+   - ✅ GCP Project: `institute-481516`
    - ✅ GCP Region: `us-central1`
    - ✅ AWS Region: `us-east-1`
    - ✅ Database password: Generated and saved (in terraform.tfvars)
 
 ## ⚠️ Blocked - Requires Billing
 
-The following cannot proceed until billing is enabled for GCP project `naphome-korvo1`:
+The following cannot proceed until billing is enabled for GCP project `institute-481516`:
 
 1. **GCP APIs** - These require billing:
    - Cloud Run API
@@ -57,7 +57,7 @@ The following cannot proceed until billing is enabled for GCP project `naphome-k
 
 ### 1. Enable Remaining APIs
 ```bash
-export GCP_PROJECT_ID=naphome-korvo1
+export GCP_PROJECT_ID=institute-481516
 ./scripts/enable-gcp-apis.sh
 ```
 
@@ -89,12 +89,12 @@ You'll need:
 ### 4. Configure GitHub Secrets
 Add these to https://github.com/InquiryInstitute/commonplace/settings/secrets/actions:
 
-- `GCP_PROJECT_ID`: naphome-korvo1
+- `GCP_PROJECT_ID`: institute-481516
 - `GCP_SA_KEY`: (Create GitHub Actions service account - see SETUP.md)
 - `CLOUDSQL_CONNECTION_NAME`: (From `terraform output` after apply)
 - `VPC_CONNECTOR`: (From `terraform output` after apply)
-- `GCS_BUCKET`: naphome-korvo1-ghost-content
-- `SERVICE_ACCOUNT`: ghost-sa@naphome-korvo1.iam.gserviceaccount.com
+- `GCS_BUCKET`: institute-481516-ghost-content
+- `SERVICE_ACCOUNT`: ghost-sa@institute-481516.iam.gserviceaccount.com
 - `AWS_ACCESS_KEY_ID`: (Your AWS access key)
 - `AWS_SECRET_ACCESS_KEY`: (Your AWS secret key)
 - `DB_PASSWORD`: (From terraform.tfvars)
