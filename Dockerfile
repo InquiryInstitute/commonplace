@@ -1,9 +1,12 @@
 FROM ghost:5-alpine
 
 # Install gcloud SDK for GCS storage adapter
+# Use virtual environment to avoid externally-managed-environment error
 RUN apk add --no-cache python3 py3-pip && \
-    pip3 install --upgrade pip && \
-    pip3 install gcsfs
+    python3 -m venv /opt/venv && \
+    . /opt/venv/bin/activate && \
+    pip install --upgrade pip && \
+    pip install gcsfs
 
 # Copy custom configuration
 COPY config.production.json /var/lib/ghost/config.production.json
