@@ -84,10 +84,10 @@ Once DNS is correctly configured and propagated, Google will automatically provi
 4. **Verify domain mapping exists** in Cloud Run
 
 ### Current Status:
-- ✅ Route 53 CNAME record: `commonplace.inquiry.institute` → `ghs.googlehosted.com.`
+- ✅ Route 53 CNAME record: `commonplace.inquiry.institute` → `ghs.googlehosted.com.` (in active hosted zone Z053032935YKZE3M0E0D1)
+- ✅ DNS resolution: Working! (`commonplace.inquiry.institute` resolves to `ghs.googlehosted.com.`)
 - ✅ Cloud Run domain mapping: Created
-- ⏳ DNS propagation: In progress (may take 5-48 hours)
-- ⏳ SSL certificate: Will be provisioned automatically once DNS propagates
+- ⏳ SSL certificate: Being provisioned by Google (can take 10-60 minutes)
 
 ## Direct Access
 
