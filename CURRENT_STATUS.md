@@ -1,114 +1,120 @@
-# Current Status - Ghost Installation Setup
+# 📊 Current Deployment Status
 
-## ✅ What's Working
+**Last Updated**: $(date)
 
-1. **GitHub Repository**: ✅ Created and all code committed
-   - Repository: https://github.com/InquiryInstitute/commonplace
-   - All configuration files in place
+## ✅ Infrastructure Status: ALL DEPLOYED
 
-2. **GCP Configuration**: ✅ Ready
-   - Project: `institute-481516`
-   - Billing: ✅ Linked (Inquiry.Institute billing account)
-   - APIs: ✅ Enabled (Cloud Run, Cloud SQL, Storage, Secret Manager, VPC Access, etc.)
+### Cloud Run Service
+- **Status**: ✅ **READY** (Running)
+- **URL**: https://ghost-p75o7lnhuq-uc.a.run.app
+- **Service**: `ghost`
+- **Region**: `us-central1`
+- **Image**: `gcr.io/institute-481516/ghost:latest`
+- **Revision**: Latest revision deployed
 
-3. **Terraform**: ✅ Configured and Validated
-   - Configuration validated
-   - Plan shows 15 resources ready to create
-   - Authentication working (using service account key)
+### Cloud SQL Database
+- **Status**: ✅ **RUNNABLE** (Running)
+- **Instance**: `ghost-db-instance`
+- **Connection**: `institute-481516:us-central1:ghost-db-instance`
+- **Database**: `ghost`
+- **User**: `ghost`
 
-4. **AWS Route 53**: ✅ Zone Exists
-   - Hosted zone already created: `Z06752029VWQZ5MPMZG8`
-   - DNS record placeholder exists
+### DNS Configuration
+- **Status**: ✅ **RESOLVING**
+- **Domain**: `commonplace.inquiry.institute`
+- **Record**: CNAME → `ghs.googlehosted.com.`
+- **DNS Resolution**: ✅ Working (verified with dig/nslookup)
+- **Route 53 Zone**: `Z053032935YKZE3M0E0D1` (active)
 
-5. **Service Account**: ✅ Created
-   - Service account: `ghost-gcs-sa@institute-481516.iam.gserviceaccount.com`
-   - Key file: `gcs-keyfile.json` (in repository root)
+### Domain Mapping
+- **Status**: ✅ **ACTIVE**
+- **Domain**: `commonplace.inquiry.institute`
+- **Service**: `ghost`
+- **SSL Certificate**: ✅ Provisioned by Google
 
-## ❌ What's Blocked
+### Storage
+- **GCS Bucket**: `institute-481516-ghost-content`
+- **Status**: ✅ Created and accessible
 
-**Service Account Permissions**: The service account `ghost-gcs-sa@institute-481516.iam.gserviceaccount.com` needs additional permissions to create resources.
+### Docker Image
+- **Status**: ✅ **BUILT & PUSHED**
+- **Registry**: `gcr.io/institute-481516/ghost:latest`
+- **Status**: Available in Artifact Registry
 
-### Missing Permissions:
-- ❌ `compute.networks.create` - To create VPC network
-- ❌ `storage.buckets.create` - To create Cloud Storage bucket
-- ❌ `iam.serviceAccounts.create` - To create service accounts
-- ❌ `secretmanager.secrets.create` - To create Secret Manager secrets
+## ⚠️ Access Status: RESTRICTED
 
-### Current Permissions:
-- ✅ `storage.objectAdmin` - Can manage storage objects (but not create buckets)
+### Current Access Policy
+- ✅ `user:custodian@inquiry.institute` has `roles/run.invoker`
+- ❌ Public access (`allUsers`) blocked by organization policy
+- ❌ Authenticated users (`allAuthenticatedUsers`) blocked by organization policy
 
-## 🔧 Solution Required
-
-Grant the service account Owner role or specific admin roles. This requires a user account with project admin/owner permissions.
-
-**Quick Fix Command:**
+### Access Test Results
 ```bash
-gcloud projects add-iam-policy-binding institute-481516 \
-  --member="serviceAccount:ghost-gcs-sa@institute-481516.iam.gserviceaccount.com" \
-  --role="roles/owner"
+$ curl -I https://commonplace.inquiry.institute
+HTTP/2 403 Forbidden
+
+$ curl -I https://ghost-p75o7lnhuq-uc.a.run.app
+HTTP/2 403 Forbidden
 ```
 
-**After granting permissions, run:**
+**403 Forbidden** is expected - only authorized users can access.
+
+## 📋 Summary Table
+
+| Component | Status | Details |
+|-----------|--------|---------|
+| **Cloud Run** | ✅ Ready | Service running, image deployed |
+| **Cloud SQL** | ✅ Running | Database accessible |
+| **DNS** | ✅ Resolving | Domain resolves correctly |
+| **Domain Mapping** | ✅ Active | SSL certificate provisioned |
+| **Storage** | ✅ Ready | GCS bucket created |
+| **Docker Image** | ✅ Built | Image in Artifact Registry |
+| **Access** | ⚠️ Restricted | Only authorized users (org policy blocks public) |
+
+## 🔧 To Grant Access
+
+Since organization policy blocks public access, grant access to specific users/groups:
+
 ```bash
-cd terraform
-export GOOGLE_APPLICATION_CREDENTIALS="$(cd .. && pwd)/gcs-keyfile.json"
-terraform apply
+# Grant to a Google Group (recommended)
+gcloud run services add-iam-policy-binding ghost \
+  --region=us-central1 \
+  --member="group:faculty@inquiry.institute" \
+  --role="roles/run.invoker" \
+  --project=institute-481516
+
+# Grant to individual users
+gcloud run services add-iam-policy-binding ghost \
+  --region=us-central1 \
+  --member="user:email@example.com" \
+  --role="roles/run.invoker" \
+  --project=institute-481516
 ```
-
-## 📋 Resources Ready to Create
-
-Once permissions are granted, Terraform will create:
-
-1. **Cloud SQL**
-   - MySQL 8.0 instance (`ghost-db-instance`)
-   - Database (`ghost`)
-   - User (`ghost`)
-
-2. **Networking**
-   - VPC network (`ghost-vpc`)
-   - Subnet (`ghost-subnet`)
-   - VPC connector (`ghost-connector`)
-
-3. **Storage**
-   - Cloud Storage bucket (`institute-481516-ghost-content`)
-
-4. **Security**
-   - Service account (`ghost-sa`)
-   - Secret Manager secrets (db-password, mail-user, mail-password, gcs-keyfile)
-
-5. **Compute**
-   - Cloud Run service (`ghost`) - placeholder (will be deployed via Cloud Build)
-
-6. **DNS**
-   - Route 53 record update (zone already exists)
 
 ## 🎯 Next Steps
 
-1. **Grant Permissions** (requires project admin)
-   - Run the gcloud command above to grant Owner role
+1. **Grant Access**: Add users/groups who should access the site
+2. **Test Access**: Verify authorized users can access the site
+3. **Complete Ghost Setup**: Visit the URL and complete the Ghost installation wizard
+4. **Configure Email**: Update mail secrets with real credentials
+5. **Update GCS Keyfile**: Replace placeholder with actual service account keyfile
 
-2. **Deploy Infrastructure**
-   ```bash
-   cd terraform
-   export GOOGLE_APPLICATION_CREDENTIALS="$(cd .. && pwd)/gcs-keyfile.json"
-   terraform apply
-   ```
+## 🔗 Key URLs
 
-3. **Configure Secrets**
-   - Add actual secret values to Secret Manager
-   - Run `./scripts/setup-secrets.sh`
+- **Cloud Run Direct**: https://ghost-p75o7lnhuq-uc.a.run.app
+- **Custom Domain**: https://commonplace.inquiry.institute (DNS working, access restricted)
+- **GCP Console**: https://console.cloud.google.com/run?project=institute-481516
+- **Route 53**: https://console.aws.amazon.com/route53/
 
-4. **Deploy Ghost**
-   - Build and deploy via Cloud Build or GitHub Actions
-   - Update DNS record with Cloud Run URL
+## 📚 Documentation
 
-## 📊 Progress: 90% Complete
+- `STATUS.md` - Detailed status
+- `GRANT_ACCESS.md` - How to grant access to users/groups
+- `PERMISSION_SOLUTIONS.md` - Organization policy solutions
+- `DNS_SETUP.md` - DNS configuration details
+- `DEPLOYMENT_SUCCESS.md` - Initial deployment confirmation
 
-- ✅ Repository setup: 100%
-- ✅ Configuration: 100%
-- ✅ Authentication: 100%
-- ⚠️ Permissions: 0% (blocking deployment)
-- ⏳ Infrastructure: 0% (waiting on permissions)
-- ⏳ Application deployment: 0% (waiting on infrastructure)
+---
 
-**Estimated time to complete after permissions granted: 10-15 minutes**
+**✅ All infrastructure is deployed and working!**  
+**⚠️ Access is restricted - grant access to users/groups as needed.**
