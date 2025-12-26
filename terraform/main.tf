@@ -216,12 +216,15 @@ resource "google_cloud_run_service" "ghost" {
 }
 
 # IAM policy for Cloud Run
-resource "google_cloud_run_service_iam_member" "public_access" {
-  service  = google_cloud_run_service.ghost.name
-  location = google_cloud_run_service.ghost.location
-  role     = "roles/run.invoker"
-  member   = "allUsers"
-}
+# Note: Organization policy may block allUsers/allAuthenticatedUsers
+# Access can be configured manually via GCP Console or gcloud CLI
+# To grant access: gcloud run services add-iam-policy-binding ghost --region=us-central1 --member="allUsers" --role="roles/run.invoker"
+# resource "google_cloud_run_service_iam_member" "public_access" {
+#   service  = google_cloud_run_service.ghost.name
+#   location = google_cloud_run_service.ghost.location
+#   role     = "roles/run.invoker"
+#   member   = "allUsers"
+# }
 
 # Secret Manager secrets
 resource "google_secret_manager_secret" "db_password" {
