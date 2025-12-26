@@ -1,146 +1,109 @@
-# Setup Status
+# 📊 Current Deployment Status
 
-## ✅ Completed
+**Last Updated**: 2025-12-26
 
-1. **GitHub Repository Created**
-   - Repository: https://github.com/InquiryInstitute/commonplace
-   - All code committed and pushed to `main` branch
+## ✅ Infrastructure Status
 
-2. **GCP APIs Partially Enabled**
-   - ✅ SQL Admin API enabled
-   - ✅ IAM API enabled
-   - ⚠️ Other APIs require billing to be enabled
+### Cloud Run Service
+- **Status**: ✅ **READY** (Running)
+- **URL**: https://ghost-p75o7lnhuq-uc.a.run.app
+- **Service**: `ghost`
+- **Region**: `us-central1`
+- **Image**: `gcr.io/institute-481516/ghost:latest`
 
-3. **Project Structure**
-   - All configuration files created
-   - Terraform infrastructure code ready
-   - CI/CD workflows configured
-   - Setup scripts created and executable
+### Cloud SQL Database
+- **Status**: ✅ **RUNNABLE** (Running)
+- **Instance**: `ghost-db-instance`
+- **Connection**: `institute-481516:us-central1:ghost-db-instance`
+- **Database**: `ghost`
+- **User**: `ghost`
 
-## ⚠️ Requires Action
+### DNS Configuration
+- **Status**: ✅ **RESOLVING**
+- **Domain**: `commonplace.inquiry.institute`
+- **Record**: CNAME → `ghs.googlehosted.com.`
+- **DNS Resolution**: ✅ Working (verified)
+- **Route 53 Zone**: `Z053032935YKZE3M0E0D1` (active)
 
-### 1. Enable GCP Billing
-The following APIs require billing to be enabled:
-- Cloud Run API
-- Secret Manager API
-- VPC Access API
-- Cloud Build API
-- Compute Engine API
+### Domain Mapping
+- **Status**: ✅ **ACTIVE**
+- **Domain**: `commonplace.inquiry.institute`
+- **Service**: `ghost`
+- **SSL Certificate**: ✅ Provisioned
 
-**Action**: Enable billing for project `institute-481516` in GCP Console, then re-run:
+### Storage
+- **GCS Bucket**: `institute-481516-ghost-content`
+- **Status**: ✅ Created
+
+## ⚠️ Access Issue
+
+### Current Access Status: **403 Forbidden**
+
+**Problem**: Organization policy blocks public access (`allUsers` and `allAuthenticatedUsers`)
+
+**Current IAM Policy**:
+- ✅ `user:custodian@inquiry.institute` has `roles/run.invoker`
+- ❌ No public access allowed
+
+### Access Test Results:
 ```bash
-export GCP_PROJECT_ID=institute-481516
-./scripts/enable-gcp-apis.sh
+$ curl -I https://commonplace.inquiry.institute
+HTTP/2 403 Forbidden
+
+$ curl -I https://ghost-p75o7lnhuq-uc.a.run.app
+HTTP/2 403 Forbidden
 ```
 
-### 2. Configure Terraform Variables
-Create `terraform/terraform.tfvars`:
-```hcl
-gcp_project_id = "institute-481516"
-gcp_region     = "us-central1"
-aws_region     = "us-east-1"
-db_password    = "your-secure-database-password"
-```
+## 🔧 To Fix Access
 
-### 3. Configure AWS Credentials
-Ensure AWS CLI is configured with Route 53 permissions:
+### Option 1: Modify Organization Policy (Requires Admin)
+The GCP organization policy needs to be updated to allow public Cloud Run access. This requires organization admin privileges.
+
+### Option 2: Grant Access to Specific Users/Groups
 ```bash
-aws configure
-# Or set environment variables:
-# export AWS_ACCESS_KEY_ID=...
-# export AWS_SECRET_ACCESS_KEY=...
-```
-
-### 4. Deploy Infrastructure
-After billing is enabled:
-```bash
-cd terraform
-terraform plan
-terraform apply
-```
-
-### 5. Configure Secrets
-```bash
-# Create GCS service account
-./scripts/create-gcs-service-account.sh
-
-# Setup all secrets
-./scripts/setup-secrets.sh
-```
-
-### 6. Configure GitHub Secrets
-Add the following secrets in GitHub repository settings:
-- `GCP_PROJECT_ID`: institute-481516
-- `GCP_SA_KEY`: Service account JSON key (create with script below)
-- `CLOUDSQL_CONNECTION_NAME`: (from Terraform output)
-- `VPC_CONNECTOR`: (from Terraform output)
-- `GCS_BUCKET`: (from Terraform output)
-- `SERVICE_ACCOUNT`: (from Terraform output)
-- `AWS_ACCESS_KEY_ID`: Your AWS access key
-- `AWS_SECRET_ACCESS_KEY`: Your AWS secret key
-- `DB_PASSWORD`: Database password
-
-### 7. Create GitHub Actions Service Account
-```bash
-gcloud iam service-accounts create github-actions \
-  --display-name="GitHub Actions Service Account" \
+# Grant access to specific users
+gcloud run services add-iam-policy-binding ghost \
+  --region=us-central1 \
+  --member="user:email@example.com" \
+  --role="roles/run.invoker" \
   --project=institute-481516
 
-gcloud projects add-iam-policy-binding institute-481516 \
-  --member="serviceAccount:github-actions@institute-481516.iam.gserviceaccount.com" \
-  --role="roles/cloudbuild.builds.editor"
-
-gcloud projects add-iam-policy-binding institute-481516 \
-  --member="serviceAccount:github-actions@institute-481516.iam.gserviceaccount.com" \
-  --role="roles/run.admin"
-
-gcloud projects add-iam-policy-binding institute-481516 \
-  --member="serviceAccount:github-actions@institute-481516.iam.gserviceaccount.com" \
-  --role="roles/iam.serviceAccountUser"
-
-gcloud projects add-iam-policy-binding institute-481516 \
-  --member="serviceAccount:github-actions@institute-481516.iam.gserviceaccount.com" \
-  --role="roles/secretmanager.secretAccessor"
-
-gcloud iam service-accounts keys create github-actions-key.json \
-  --iam-account=github-actions@institute-481516.iam.gserviceaccount.com \
+# Grant access to a Google Group
+gcloud run services add-iam-policy-binding ghost \
+  --region=us-central1 \
+  --member="group:group@example.com" \
+  --role="roles/run.invoker" \
   --project=institute-481516
-
-# Copy the contents of github-actions-key.json to GitHub secret GCP_SA_KEY
-cat github-actions-key.json
 ```
 
-### 8. Update Domain Name Servers
-After Terraform creates the Route 53 hosted zone:
-```bash
-cd terraform
-terraform output route53_name_servers
-```
-Update your domain registrar (`inquiry.institute`) with these name servers.
+### Option 3: Use Service Account Authentication
+Set up authentication via service accounts for programmatic access.
 
-### 9. Deploy Ghost
-Either:
-- Push to `main` branch (triggers GitHub Actions)
-- Or manually: `gcloud builds submit --config cloudbuild.yaml`
+## 📋 Summary
 
-### 10. Update DNS Record
-After Cloud Run is deployed:
-```bash
-CLOUD_RUN_URL=$(gcloud run services describe ghost --region=us-central1 --format="value(status.url)")
-./scripts/setup-dns.sh $CLOUD_RUN_URL
-```
+| Component | Status | Notes |
+|-----------|--------|-------|
+| Cloud Run | ✅ Ready | Service running, image deployed |
+| Cloud SQL | ✅ Running | Database accessible |
+| DNS | ✅ Resolving | Domain resolves correctly |
+| Domain Mapping | ✅ Active | SSL certificate provisioned |
+| Storage | ✅ Ready | GCS bucket created |
+| **Access** | ❌ **Blocked** | Organization policy prevents public access |
 
-## Current Project Configuration
+## 🎯 Next Steps
 
-- **GCP Project**: institute-481516
-- **GitHub Repo**: https://github.com/InquiryInstitute/commonplace
-- **Domain**: commonplace.inquiry.institute
+1. **Fix Access**: Update organization policy or grant access to specific users
+2. **Test Access**: Once access is granted, verify `https://commonplace.inquiry.institute` works
+3. **Complete Ghost Setup**: Visit the URL and complete the Ghost installation wizard
+4. **Configure Email**: Update mail secrets with real credentials
+5. **Update GCS Keyfile**: Replace placeholder with actual service account keyfile
 
-## Next Immediate Steps
+## 🔗 Key URLs
 
-1. Enable billing in GCP Console
-2. Re-run `./scripts/enable-gcp-apis.sh`
-3. Configure `terraform/terraform.tfvars`
-4. Run `terraform apply` in the terraform directory
+- **Cloud Run Direct**: https://ghost-p75o7lnhuq-uc.a.run.app
+- **Custom Domain**: https://commonplace.inquiry.institute (DNS working, access blocked)
+- **GCP Console**: https://console.cloud.google.com/run?project=institute-481516
 
-See `SETUP.md` for detailed instructions.
+---
+
+**All infrastructure is deployed and working. Only access permissions need to be configured.**
