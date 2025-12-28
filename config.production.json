@@ -30,12 +30,7 @@
     }
   },
   "storage": {
-    "active": "gcs",
-    "gcs": {
-      "bucket": "${GCS_BUCKET}",
-      "projectId": "${GCP_PROJECT_ID}",
-      "keyFilename": "/secrets/gcs-keyfile.json"
-    }
+    "active": "local-file-store"
   },
   "paths": {
     "contentPath": "/var/lib/ghost/content/"
