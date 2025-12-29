@@ -30,7 +30,7 @@
     }
   },
   "storage": {
-    "active": "local-file-store"
+    "active": "LocalFileStorage"
   },
   "paths": {
     "contentPath": "/var/lib/ghost/content/"
