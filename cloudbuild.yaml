@@ -55,7 +55,7 @@ options:
 timeout: '1200s'
 
 substitutions:
-  _DB_HOST: '127.0.0.1'  # Will be set via Cloud SQL proxy
+  _DB_HOST: '10.133.0.2'  # Cloud SQL private IP
   _DB_PORT: '3306'
   _DB_USER: 'ghost'
   _DB_NAME: 'ghost'
