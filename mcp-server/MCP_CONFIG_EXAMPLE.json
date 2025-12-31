@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "commonplace-ghost": {
+      "command": "node",
+      "args": [
+        "/Users/danielmcshan/GitHub/commonplace/mcp-server/src/index.js"
+      ],
+      "env": {
+        "GHOST_URL": "https://commonplace.inquiry.institute",
+        "GHOST_ADMIN_API_KEY": "your-ghost-admin-api-key-here"
+      }
+    }
+  }
+}

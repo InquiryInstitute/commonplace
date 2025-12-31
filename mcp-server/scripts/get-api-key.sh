@@ -1,0 +1,22 @@
+#!/bin/bash
+# Helper script to guide users through getting Ghost Admin API Key
+
+echo "=========================================="
+echo "Ghost Admin API Key Setup"
+echo "=========================================="
+echo ""
+echo "To get your Ghost Admin API Key:"
+echo ""
+echo "1. Visit: https://commonplace.inquiry.institute/ghost"
+echo "2. Log in with your admin credentials"
+echo "3. Go to Settings → Integrations"
+echo "4. Click 'Add custom integration'"
+echo "5. Name it 'MCP Server'"
+echo "6. Copy the 'Admin API Key'"
+echo ""
+echo "Then add it to your .env file:"
+echo "  GHOST_ADMIN_API_KEY=your-key-here"
+echo ""
+echo "Or set it as an environment variable:"
+echo "  export GHOST_ADMIN_API_KEY=your-key-here"
+echo ""

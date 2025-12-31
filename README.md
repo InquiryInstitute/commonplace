@@ -124,6 +124,37 @@ Push to the `main` branch or manually trigger the workflow from GitHub Actions.
 3. Create your admin account
 4. Configure your site settings
 
+### 7. Set Up MCP Server (Optional)
+
+The MCP server enables AI assistants to manage Ghost content programmatically.
+
+1. **Install MCP Server**:
+   ```bash
+   cd mcp-server
+   npm install
+   ```
+
+2. **Get Ghost Admin API Key**:
+   - Visit https://commonplace.inquiry.institute/ghost
+   - Go to Settings → Integrations
+   - Create a custom integration
+   - Copy the Admin API Key
+
+3. **Configure**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your API key
+   ```
+
+4. **Test**:
+   ```bash
+   npm test
+   ```
+
+5. **Configure MCP Client** (see `mcp-server/README.md` for details)
+
+See `mcp-server/README.md` for complete setup instructions and `mcp-server/FACULTY_GUIDE.md` for usage examples.
+
 ## Project Structure
 
 ```
@@ -136,6 +167,12 @@ Push to the `main` branch or manually trigger the workflow from GitHub Actions.
 │   ├── variables.tf        # Variable definitions
 │   ├── outputs.tf          # Output values
 │   └── terraform.tfvars.example
+├── mcp-server/              # MCP Server for Ghost operations
+│   ├── src/
+│   │   └── index.js        # MCP server implementation
+│   ├── scripts/            # Helper scripts
+│   ├── package.json        # Node.js dependencies
+│   └── README.md           # MCP server documentation
 ├── scripts/                 # Setup and utility scripts
 │   ├── setup-secrets.sh    # Configure Secret Manager
 │   └── create-gcs-service-account.sh

@@ -1,0 +1,29 @@
+{
+  "name": "commonplace-ghost-mcp",
+  "version": "1.0.0",
+  "description": "MCP server for Ghost CMS operations - account management, essay publishing, and review",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "node --watch src/index.js",
+    "test": "node scripts/test-connection.js"
+  },
+  "keywords": [
+    "mcp",
+    "ghost",
+    "cms",
+    "essay",
+    "publishing"
+  ],
+  "author": "Inquiry Institute",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.4",
+    "axios": "^1.7.7",
+    "dotenv": "^16.4.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
