@@ -29,9 +29,6 @@
       }
     }
   },
-  "storage": {
-    "active": "LocalFileStorage"
-  },
   "paths": {
     "contentPath": "/var/lib/ghost/content/"
   },
