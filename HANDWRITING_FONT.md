@@ -34,15 +34,30 @@ The script will:
    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
    <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
    <style>
+   /* Commonplace Handwriting Font - Essay Content Only */
    :root {
      --font-handwriting: 'Kalam', cursive;
    }
    
-   h1, h2, h3, h4, h5, h6,
+   /* Apply to essay/post titles */
    .post-title,
    .post-card-title,
-   .gh-head-title,
-   .gh-head-menu a {
+   .post-header h1,
+   .gh-post-title {
+     font-family: var(--font-handwriting) !important;
+   }
+   
+   /* Apply to essay/post content */
+   .post-content,
+   .post-content p,
+   .post-content h1,
+   .post-content h2,
+   .post-content h3,
+   .post-content h4,
+   .post-content h5,
+   .post-content h6,
+   .gh-content,
+   .gh-content p {
      font-family: var(--font-handwriting) !important;
    }
    </style>
@@ -84,37 +99,52 @@ The script will:
 
 ## Customization
 
+### Default Configuration (Essay Content Only)
+
+The default setup applies handwriting font to:
+- Essay/post titles
+- Essay/post content (body text and headings within content)
+
+Navigation, metadata, and UI elements use the default theme font.
+
 ### Apply to Different Elements
 
-**Headings Only** (default):
+**Essay Content Only** (default - recommended):
 ```css
-h1, h2, h3, h4, h5, h6,
-.post-title,
-.post-card-title {
-  font-family: var(--font-handwriting) !important;
-}
-```
-
-**Headings + Navigation**:
-```css
-h1, h2, h3, h4, h5, h6,
+/* Titles */
 .post-title,
 .post-card-title,
-.gh-head-title,
-.gh-head-menu a {
+.post-header h1,
+.gh-post-title {
+  font-family: var(--font-handwriting) !important;
+}
+
+/* Content */
+.post-content,
+.post-content p,
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.gh-content,
+.gh-content p {
   font-family: var(--font-handwriting) !important;
 }
 ```
 
-**All Text** (use sparingly):
+**Titles Only** (if you want to keep body text in default font):
 ```css
-body, p, .post-content {
+.post-title,
+.post-card-title,
+.post-header h1,
+.gh-post-title {
   font-family: var(--font-handwriting) !important;
 }
 ```
 
-**Specific Elements Only**:
+**Include Metadata** (if you want author/date in handwriting):
 ```css
+.post-title,
+.post-content,
 .post-meta,
 .post-author,
 .post-date {

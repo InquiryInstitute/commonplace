@@ -101,29 +101,32 @@ NEW_HEAD="<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">
 <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>
 <link href=\"${FONT_URL}\" rel=\"stylesheet\">
 <style>
-/* Commonplace Handwriting Font */
+/* Commonplace Handwriting Font - Essay Content Only */
 :root {
   --font-handwriting: ${FONT_FAMILY};
 }
 
-/* Apply to headings */
-h1, h2, h3, h4, h5, h6,
+/* Apply to essay/post titles */
 .post-title,
 .post-card-title,
-.gh-head-title,
-.gh-head-menu a {
+.post-header h1,
+.gh-post-title {
   font-family: var(--font-handwriting) !important;
 }
 
-/* Optional: Apply to body text (comment out if too much) */
-/* body, p, .post-content {
+/* Apply to essay/post content */
+.post-content,
+.post-content p,
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content h5,
+.post-content h6,
+.gh-content,
+.gh-content p {
   font-family: var(--font-handwriting) !important;
-} */
-
-/* Optional: Apply to specific elements only */
-/* .post-meta, .post-author, .post-date {
-  font-family: var(--font-handwriting) !important;
-} */
+}
 </style>"
 
 # Combine with existing head injection
@@ -156,7 +159,8 @@ if echo "$UPDATE_RESPONSE" | grep -q '"settings"'; then
   echo "✅ Handwriting font added successfully!"
   echo ""
   echo "Font: $FONT_NAME"
-  echo "Applied to: Headings, titles, navigation"
+  echo "Applied to: Essay titles and content only"
+  echo "Navigation and UI elements use default font"
   echo ""
   echo "Visit your site to see the changes:"
   echo "  ${GHOST_URL}"
@@ -164,7 +168,7 @@ if echo "$UPDATE_RESPONSE" | grep -q '"settings"'; then
   echo "To customize further:"
   echo "  1. Go to Settings → Code Injection"
   echo "  2. Edit the CSS in Site Header"
-  echo "  3. Uncomment sections to apply font to body text or other elements"
+  echo "  3. Adjust selectors to target different elements"
 else
   echo "❌ Failed to update settings"
   echo "Response: $UPDATE_RESPONSE"

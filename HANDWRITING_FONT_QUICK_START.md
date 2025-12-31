@@ -23,15 +23,30 @@ This will show you exactly what code to paste into Ghost Admin.
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Kalam:wght@300;400;700&display=swap" rel="stylesheet">
 <style>
+/* Commonplace Handwriting Font - Essay Content Only */
 :root {
   --font-handwriting: 'Kalam', cursive;
 }
 
-h1, h2, h3, h4, h5, h6,
+/* Apply to essay/post titles */
 .post-title,
 .post-card-title,
-.gh-head-title,
-.gh-head-menu a {
+.post-header h1,
+.gh-post-title {
+  font-family: var(--font-handwriting) !important;
+}
+
+/* Apply to essay/post content */
+.post-content,
+.post-content p,
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content h5,
+.post-content h6,
+.gh-content,
+.gh-content p {
   font-family: var(--font-handwriting) !important;
 }
 </style>
@@ -51,6 +66,7 @@ Replace the font URL and family name:
 
 ## Done! ✅
 
-Your headings and titles now use a handwriting font.
+Your essay content and titles now use a handwriting font.
+Navigation and UI elements remain with the default font.
 
 See `HANDWRITING_FONT.md` for more customization options.

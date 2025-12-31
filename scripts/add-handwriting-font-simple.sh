@@ -73,18 +73,43 @@ cat <<EOF
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="${FONT_URL}" rel="stylesheet">
 <style>
-/* Commonplace Handwriting Font */
+/* Commonplace Handwriting Font - Essay Content Only */
 :root {
   --font-handwriting: ${FONT_FAMILY};
 }
 
-/* Apply to headings and titles */
-h1, h2, h3, h4, h5, h6,
+/* Apply to essay/post titles */
 .post-title,
 .post-card-title,
-.gh-head-title,
-.gh-head-menu a {
+.post-header h1,
+.gh-post-title {
   font-family: var(--font-handwriting) !important;
+}
+
+/* Apply to essay/post content */
+.post-content,
+.post-content p,
+.post-content h1,
+.post-content h2,
+.post-content h3,
+.post-content h4,
+.post-content h5,
+.post-content h6,
+.gh-content,
+.gh-content p {
+  font-family: var(--font-handwriting) !important;
+}
+
+/* Keep navigation and other UI elements with default font */
+.gh-head-title,
+.gh-head-menu,
+.gh-head-menu a,
+.gh-head-actions,
+.post-meta,
+.post-author,
+.post-date,
+.gh-post-meta {
+  /* Use default theme font - no override */
 }
 </style>
 EOF
@@ -95,5 +120,6 @@ echo ""
 echo "5. Visit your site to see the changes!"
 echo "   https://commonplace.inquiry.institute"
 echo ""
-echo "✅ Done! Your site now uses ${FONT_NAME} for headings."
+echo "✅ Done! Your site now uses ${FONT_NAME} for essay content and titles only."
+echo "   Navigation and UI elements remain with the default font."
 echo ""
