@@ -343,6 +343,94 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
         },
       },
+      {
+        name: 'create_tag',
+        description: 'Create a new tag in Ghost. Supports Commonplace tag structure (Faculty, Colleges, Formats, Series, individual faculty tags).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            name: {
+              type: 'string',
+              description: 'Tag name (e.g., "Arendt", "ARTS", "Essay")',
+            },
+            slug: {
+              type: 'string',
+              description: 'Tag slug (e.g., "faculty-arendt", "arts", "essay"). Auto-generated from name if not provided.',
+            },
+            description: {
+              type: 'string',
+              description: 'Tag description',
+            },
+            parent_slug: {
+              type: 'string',
+              description: 'Parent tag slug (e.g., "faculty" for child tags). For Commonplace structure, most tags should have "faculty" as parent.',
+            },
+          },
+          required: ['name'],
+        },
+      },
+      {
+        name: 'list_tags',
+        description: 'List all tags with optional filtering by parent, name, or slug.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            parent_slug: {
+              type: 'string',
+              description: 'Filter by parent tag slug',
+            },
+            limit: {
+              type: 'number',
+              description: 'Maximum number of results (default: 15, max: 100)',
+              default: 15,
+            },
+            page: {
+              type: 'number',
+              description: 'Page number for pagination (default: 1)',
+              default: 1,
+            },
+          },
+        },
+      },
+      {
+        name: 'get_tag',
+        description: 'Get details of a specific tag by slug or ID.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            slug: {
+              type: 'string',
+              description: 'Tag slug',
+            },
+            tag_id: {
+              type: 'string',
+              description: 'Tag ID (alternative to slug)',
+            },
+          },
+        },
+      },
+      {
+        name: 'create_faculty_tag',
+        description: 'Create a faculty-specific tag following Commonplace naming convention (faculty-[lastname]).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            lastname: {
+              type: 'string',
+              description: 'Faculty last name (e.g., "arendt", "marx")',
+            },
+            full_name: {
+              type: 'string',
+              description: 'Full name for tag display (e.g., "Hannah Arendt")',
+            },
+            description: {
+              type: 'string',
+              description: 'Tag description',
+            },
+          },
+          required: ['lastname'],
+        },
+      },
     ],
   };
 });
@@ -963,6 +1051,299 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                   location: user.location,
                   website: user.website,
                 },
+              }, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'create_tag': {
+        const { name, slug, description, parent_slug } = args;
+        
+        // Generate slug if not provided
+        let tagSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        
+        // Get parent tag ID if parent_slug provided
+        let parentId = null;
+        if (parent_slug) {
+          const parentResult = await ghostRequest('GET', `/tags/?filter=slug:${parent_slug}`);
+          if (parentResult.success && parentResult.data?.tags?.length > 0) {
+            parentId = parentResult.data.tags[0].id;
+          } else {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    error: 'Parent tag not found',
+                    message: `Parent tag with slug '${parent_slug}' not found`,
+                  }, null, 2),
+                },
+              ],
+              isError: true,
+            };
+          }
+        }
+        
+        // Check if tag already exists
+        const checkResult = await ghostRequest('GET', `/tags/?filter=slug:${tagSlug}`);
+        if (checkResult.success && checkResult.data?.tags?.length > 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  error: 'Tag already exists',
+                  tag: checkResult.data.tags[0],
+                }, null, 2),
+              },
+            ],
+          };
+        }
+        
+        // Create tag
+        const tagData = {
+          tags: [{
+            name,
+            slug: tagSlug,
+            description: description || '',
+            visibility: 'public',
+          }],
+        };
+        
+        if (parentId) {
+          tagData.tags[0].parent_id = parentId;
+        }
+        
+        const result = await ghostRequest('POST', '/tags/', tagData);
+        
+        if (!result.success) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({ error: result.error, details: result.details }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        const tag = result.data.tags[0];
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: true,
+                message: 'Tag created successfully',
+                tag: {
+                  id: tag.id,
+                  name: tag.name,
+                  slug: tag.slug,
+                  description: tag.description,
+                  url: tag.url,
+                },
+              }, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'list_tags': {
+        const { parent_slug, limit = 15, page = 1 } = args;
+        
+        let filter = '';
+        if (parent_slug) {
+          filter = `parent.slug:${parent_slug}`;
+        }
+        
+        const params = new URLSearchParams({
+          limit: limit.toString(),
+          page: page.toString(),
+        });
+        if (filter) {
+          params.append('filter', filter);
+        }
+        
+        const result = await ghostRequest('GET', `/tags/?${params.toString()}`);
+        
+        if (!result.success) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({ error: result.error, details: result.details }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        const tags = result.data.tags || [];
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: true,
+                count: tags.length,
+                meta: result.data.meta,
+                tags: tags.map(tag => ({
+                  id: tag.id,
+                  name: tag.name,
+                  slug: tag.slug,
+                  description: tag.description,
+                  url: tag.url,
+                  parent: tag.parent ? { id: tag.parent.id, name: tag.parent.name, slug: tag.parent.slug } : null,
+                })),
+              }, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'get_tag': {
+        const { slug, tag_id } = args;
+        
+        if (!slug && !tag_id) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  error: 'Missing parameter',
+                  message: 'Either slug or tag_id must be provided',
+                }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        const endpoint = tag_id ? `/tags/${tag_id}/` : `/tags/slug/${slug}/`;
+        const result = await ghostRequest('GET', endpoint);
+        
+        if (!result.success || !result.data?.tags?.length) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  error: 'Tag not found',
+                  message: result.error || 'Tag not found',
+                }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        const tag = result.data.tags[0];
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: true,
+                tag: {
+                  id: tag.id,
+                  name: tag.name,
+                  slug: tag.slug,
+                  description: tag.description,
+                  url: tag.url,
+                  parent: tag.parent ? { id: tag.parent.id, name: tag.parent.name, slug: tag.parent.slug } : null,
+                  post_count: tag.count?.posts || 0,
+                },
+              }, null, 2),
+            },
+          ],
+        };
+      }
+
+      case 'create_faculty_tag': {
+        const { lastname, full_name, description } = args;
+        
+        const slug = `faculty-${lastname.toLowerCase()}`;
+        const name = full_name || lastname;
+        const tagDescription = description || `Content by ${name}`;
+        
+        // Get Faculty parent tag
+        const facultyResult = await ghostRequest('GET', '/tags/?filter=slug:faculty');
+        if (!facultyResult.success || !facultyResult.data?.tags?.length) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  error: 'Faculty tag not found',
+                  message: 'The primary "Faculty" tag must exist first. Run setup-tag-structure.sh to create it.',
+                }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        const facultyTag = facultyResult.data.tags[0];
+        
+        // Check if tag already exists
+        const checkResult = await ghostRequest('GET', `/tags/?filter=slug:${slug}`);
+        if (checkResult.success && checkResult.data?.tags?.length > 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  message: 'Tag already exists',
+                  tag: checkResult.data.tags[0],
+                }, null, 2),
+              },
+            ],
+          };
+        }
+        
+        // Create tag
+        const tagData = {
+          tags: [{
+            name,
+            slug,
+            description: tagDescription,
+            parent_id: facultyTag.id,
+            visibility: 'public',
+          }],
+        };
+        
+        const result = await ghostRequest('POST', '/tags/', tagData);
+        
+        if (!result.success) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({ error: result.error, details: result.details }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        const tag = result.data.tags[0];
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: true,
+                message: `Faculty tag created: ${name}`,
+                tag: {
+                  id: tag.id,
+                  name: tag.name,
+                  slug: tag.slug,
+                  url: tag.url,
+                  parent: 'faculty',
+                },
+                url: tag.url,
               }, null, 2),
             },
           ],
