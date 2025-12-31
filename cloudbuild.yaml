@@ -36,7 +36,7 @@ steps:
       - '--set-env-vars'
       - 'DB_HOST=${_DB_HOST},DB_PORT=${_DB_PORT},DB_USER=${_DB_USER},DB_NAME=${_DB_NAME},GCS_BUCKET=${_GCS_BUCKET},GCP_PROJECT_ID=$PROJECT_ID'
       - '--set-secrets'
-      - 'DB_PASSWORD=db-password:latest,MAIL_USER=mail-user:latest,MAIL_PASSWORD=mail-password:latest,GCS_KEYFILE=gcs-keyfile:latest'
+      - 'DB_PASSWORD=db-password:latest,MAIL_USER=mail-user:latest,MAIL_PASSWORD=mail-password:latest,MAIL_FROM=mail-from:latest,GCS_KEYFILE=gcs-keyfile:latest'
       - '--add-cloudsql-instances'
       - '${_CLOUDSQL_CONNECTION_NAME}'
       - '--vpc-connector'

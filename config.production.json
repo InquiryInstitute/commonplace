@@ -22,11 +22,15 @@
   "mail": {
     "transport": "SMTP",
     "options": {
-      "service": "Gmail",
+      "host": "smtp.mailgun.org",
+      "port": 587,
+      "secure": false,
+      "requireTLS": true,
       "auth": {
         "user": "${MAIL_USER}",
         "pass": "${MAIL_PASSWORD}"
-      }
+      },
+      "from": "${MAIL_FROM}"
     }
   },
   "paths": {

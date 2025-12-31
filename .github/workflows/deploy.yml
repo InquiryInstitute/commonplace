@@ -43,6 +43,6 @@ jobs:
         run: |
           gcloud run services update ghost \
             --region=$GCP_REGION \
-            --set-secrets="DB_PASSWORD=db-password:latest,MAIL_USER=mail-user:latest,MAIL_PASSWORD=mail-password:latest,GCS_KEYFILE=gcs-keyfile:latest" \
+            --set-secrets="DB_PASSWORD=db-password:latest,MAIL_USER=mail-user:latest,MAIL_PASSWORD=mail-password:latest,MAIL_FROM=mail-from:latest,GCS_KEYFILE=gcs-keyfile:latest" \
             --add-cloudsql-instances=${{ secrets.CLOUDSQL_CONNECTION_NAME }} \
             --vpc-connector=${{ secrets.VPC_CONNECTOR }}
