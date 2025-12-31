@@ -8,11 +8,13 @@
 
 ## Next Steps
 
-### 1. Set OpenAI API Key Secret
+### 1. Set OpenRouter API Key Secret
 
 ```bash
-supabase secrets set OPENAI_API_KEY=your-openai-api-key --project-ref xougqdomkoisrxdnagcj
+supabase secrets set OPENROUTER_API_KEY=your-openrouter-api-key --project-ref xougqdomkoisrxdnagcj
 ```
+
+Get your API key from: https://openrouter.ai/keys
 
 ### 2. Test the Function
 

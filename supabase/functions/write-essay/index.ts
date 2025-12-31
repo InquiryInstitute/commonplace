@@ -8,7 +8,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY')
+const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY')
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL') || ''
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') || ''
 
@@ -146,10 +146,10 @@ Requirements:
 
 Generate the ${format} now:`
 
-    // Call OpenAI API
-    if (!OPENAI_API_KEY) {
+    // Call OpenRouter API
+    if (!OPENROUTER_API_KEY) {
       return new Response(
-        JSON.stringify({ error: 'OPENAI_API_KEY not configured' }),
+        JSON.stringify({ error: 'OPENROUTER_API_KEY not configured' }),
         {
           status: 500,
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -157,14 +157,19 @@ Generate the ${format} now:`
       )
     }
 
-    const openaiResponse = await fetch('https://api.openai.com/v1/chat/completions', {
+    // Use a high-quality model via OpenRouter (default to Claude Sonnet or GPT-4)
+    const model = 'anthropic/claude-3.5-sonnet' // or 'openai/gpt-4-turbo'
+
+    const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
         'Content-Type': 'application/json',
+        'HTTP-Referer': 'https://commonplace.inquiry.institute', // Optional: for analytics
+        'X-Title': 'Commonplace Essay Generator', // Optional: for analytics
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: model,
         messages: [
           {
             role: 'system',
@@ -182,10 +187,10 @@ Generate the ${format} now:`
       }),
     })
 
-    if (!openaiResponse.ok) {
-      const error = await openaiResponse.text()
+    if (!openrouterResponse.ok) {
+      const error = await openrouterResponse.text()
       return new Response(
-        JSON.stringify({ error: 'OpenAI API error', details: error }),
+        JSON.stringify({ error: 'OpenRouter API error', details: error }),
         {
           status: 500,
           headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
@@ -193,8 +198,8 @@ Generate the ${format} now:`
       )
     }
 
-    const openaiData = await openaiResponse.json()
-    const essayContent = openaiData.choices[0]?.message?.content || ''
+    const openrouterData = await openrouterResponse.json()
+    const essayContent = openrouterData.choices[0]?.message?.content || ''
 
     // Extract title if present, or generate one
     const titleMatch = essayContent.match(/^#\s+(.+)$/m) || essayContent.match(/^Title:\s*(.+)$/mi)

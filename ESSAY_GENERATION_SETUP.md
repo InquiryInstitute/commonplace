@@ -30,8 +30,10 @@ npm install -g supabase
 # Link to your project
 supabase link --project-ref your-project-ref
 
-# Set OpenAI API key
-supabase secrets set OPENAI_API_KEY=your-openai-api-key
+# Set OpenRouter API key
+supabase secrets set OPENROUTER_API_KEY=your-openrouter-api-key
+```
+Get your key from: https://openrouter.ai/keys
 
 # Deploy
 supabase functions deploy write-essay
@@ -220,9 +222,10 @@ supabase functions deploy write-essay
 - Check available personas in edge function
 - Use lowercase lastname (e.g., "arendt" not "Arendt")
 
-### "OpenAI API error"
-- Verify `OPENAI_API_KEY` is set in Supabase secrets
-- Check OpenAI API quota/limits
+### "OpenRouter API error"
+- Verify `OPENROUTER_API_KEY` is set in Supabase secrets
+- Check OpenRouter API quota/limits
+- Verify you have credits in your OpenRouter account
 
 ### "Author not found" (when auto_publish)
 - Ensure author email exists in Ghost
@@ -230,16 +233,16 @@ supabase functions deploy write-essay
 
 ## Security
 
-- OpenAI API key stored in Supabase secrets (not exposed)
+- OpenRouter API key stored in Supabase secrets (not exposed)
 - Supabase anon key is safe for client-side use
 - Essays are created as drafts by default (requires review)
 - Faculty must have Ghost account to publish
 
 ## Cost Considerations
 
-- OpenAI API usage (GPT-4): ~$0.03-0.06 per essay (medium length)
+- OpenRouter API usage: Varies by model (Claude 3.5 Sonnet ~$0.003-0.015 per 1K tokens)
 - Supabase Edge Functions: Free tier includes 500K invocations/month
-- Monitor usage in Supabase dashboard
+- Monitor usage in Supabase dashboard and OpenRouter dashboard
 
 ## Related Documentation
 

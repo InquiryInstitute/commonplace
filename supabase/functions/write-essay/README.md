@@ -19,8 +19,10 @@ supabase link --project-ref your-project-ref
 ### 3. Set Environment Variables
 
 ```bash
-supabase secrets set OPENAI_API_KEY=your-openai-api-key
+supabase secrets set OPENROUTER_API_KEY=your-openrouter-api-key
 ```
+
+Get your OpenRouter API key from: https://openrouter.ai/keys
 
 ### 4. Deploy
 
@@ -93,9 +95,18 @@ Add more personas by updating `FACULTY_PERSONAS` in `index.ts`.
 
 ## Environment Variables
 
-- `OPENAI_API_KEY`: OpenAI API key for GPT-4
+- `OPENROUTER_API_KEY`: OpenRouter API key (get from https://openrouter.ai/keys)
 - `SUPABASE_URL`: Supabase project URL (auto-set)
 - `SUPABASE_SERVICE_ROLE_KEY`: Service role key (auto-set)
+
+## Model Configuration
+
+The function uses `anthropic/claude-3.5-sonnet` by default. To change the model, edit `index.ts` and update the `model` variable. Available models:
+- `anthropic/claude-3.5-sonnet` (default, high quality)
+- `openai/gpt-4-turbo`
+- `anthropic/claude-3-opus`
+- `google/gemini-pro`
+- See https://openrouter.ai/models for full list
 
 ## Local Development
 
