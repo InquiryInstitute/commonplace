@@ -25,6 +25,8 @@ dotenv.config();
 const GHOST_URL = process.env.GHOST_URL || 'https://commonplace.inquiry.institute';
 const GHOST_ADMIN_API_KEY = process.env.GHOST_ADMIN_API_KEY || '';
 const GHOST_ADMIN_API_URL = `${GHOST_URL}/ghost/api/admin`;
+const SUPABASE_URL = process.env.SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = process.env.SUPABASE_ANON_KEY || '';
 
 // Create Ghost API client
 const ghostClient = axios.create({
@@ -429,6 +431,53 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
           },
           required: ['lastname'],
+        },
+      },
+      {
+        name: 'write_essay_in_persona',
+        description: 'Generate an essay in the persona of a faculty member using AI. Calls Supabase edge function to generate content in their distinctive style.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            faculty_lastname: {
+              type: 'string',
+              description: 'Last name of faculty member (e.g., "arendt", "marx", "austen")',
+            },
+            topic: {
+              type: 'string',
+              description: 'Topic or subject of the essay',
+            },
+            format: {
+              type: 'string',
+              enum: ['essay', 'salon', 'review', 'dialogue'],
+              description: 'Format of the piece (default: essay)',
+              default: 'essay',
+            },
+            length: {
+              type: 'string',
+              enum: ['short', 'medium', 'long'],
+              description: 'Length of the essay (default: medium)',
+              default: 'medium',
+            },
+            style_notes: {
+              type: 'string',
+              description: 'Additional style instructions or notes',
+            },
+            additional_context: {
+              type: 'string',
+              description: 'Additional context for the essay topic',
+            },
+            auto_publish: {
+              type: 'boolean',
+              description: 'Automatically publish to Ghost after generation (default: false)',
+              default: false,
+            },
+            author_email: {
+              type: 'string',
+              description: 'Email of author to attribute the essay to (required if auto_publish is true)',
+            },
+          },
+          required: ['faculty_lastname', 'topic'],
         },
       },
     ],
@@ -1348,6 +1397,207 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             },
           ],
         };
+      }
+
+      case 'write_essay_in_persona': {
+        const {
+          faculty_lastname,
+          topic,
+          format = 'essay',
+          length = 'medium',
+          style_notes,
+          additional_context,
+          auto_publish = false,
+          author_email,
+        } = args;
+
+        // Validate Supabase configuration
+        if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  error: 'Supabase not configured',
+                  message: 'SUPABASE_URL and SUPABASE_ANON_KEY must be set in environment',
+                }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
+
+        // Call Supabase edge function
+        const supabaseFunctionUrl = `${SUPABASE_URL}/functions/v1/write-essay`;
+        
+        try {
+          const response = await axios.post(
+            supabaseFunctionUrl,
+            {
+              faculty_lastname,
+              topic,
+              format,
+              length,
+              style_notes,
+              additional_context,
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                'Content-Type': 'application/json',
+              },
+            }
+          );
+
+          if (!response.data.success) {
+            return {
+              content: [
+                {
+                  type: 'text',
+                  text: JSON.stringify({
+                    error: 'Essay generation failed',
+                    details: response.data,
+                  }, null, 2),
+                },
+              ],
+              isError: true,
+            };
+          }
+
+          const essay = response.data.essay;
+
+          // If auto_publish is enabled, publish to Ghost
+          let publishedPost = null;
+          if (auto_publish) {
+            if (!author_email) {
+              return {
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify({
+                      error: 'author_email required',
+                      message: 'author_email is required when auto_publish is true',
+                      essay: essay, // Return essay even if publish fails
+                    }, null, 2),
+                  },
+                ],
+                isError: true,
+              };
+            }
+
+            // Get author ID
+            const authorResult = await ghostRequest('GET', `/users/?filter=email:'${author_email}'`);
+            if (!authorResult.success || !authorResult.data?.users?.length) {
+              return {
+                content: [
+                  {
+                    type: 'text',
+                    text: JSON.stringify({
+                      error: 'Author not found',
+                      message: `No user found with email: ${author_email}`,
+                      essay: essay, // Return essay even if publish fails
+                    }, null, 2),
+                  },
+                ],
+                isError: true,
+              };
+            }
+
+            const author = authorResult.data.users[0];
+
+            // Get or create faculty tag
+            const facultyTagSlug = `faculty-${faculty_lastname.toLowerCase()}`;
+            let facultyTagId = null;
+            const tagResult = await ghostRequest('GET', `/tags/?filter=slug:${facultyTagSlug}`);
+            if (tagResult.success && tagResult.data?.tags?.length > 0) {
+              facultyTagId = tagResult.data.tags[0].id;
+            } else {
+              // Create faculty tag
+              const createTagResult = await ghostRequest('POST', '/tags/', {
+                tags: [{
+                  name: essay.faculty.full_name,
+                  slug: facultyTagSlug,
+                  description: `Content by ${essay.faculty.full_name}`,
+                  visibility: 'public',
+                }],
+              });
+              if (createTagResult.success) {
+                facultyTagId = createTagResult.data.tags[0].id;
+              }
+            }
+
+            // Get format tag
+            let formatTagId = null;
+            const formatTagResult = await ghostRequest('GET', `/tags/?filter=slug:${format}`);
+            if (formatTagResult.success && formatTagResult.data?.tags?.length > 0) {
+              formatTagId = formatTagResult.data.tags[0].id;
+            }
+
+            // Create post
+            const postData = {
+              posts: [{
+                title: essay.title,
+                html: essay.content,
+                status: 'draft', // Start as draft for review
+                authors: [{ id: author.id }],
+                tags: [
+                  ...(facultyTagId ? [{ id: facultyTagId }] : []),
+                  ...(formatTagId ? [{ id: formatTagId }] : []),
+                ],
+              }],
+            };
+
+            const publishResult = await ghostRequest('POST', '/posts/', postData);
+            
+            if (publishResult.success) {
+              publishedPost = publishResult.data.posts[0];
+            }
+          }
+
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  success: true,
+                  message: auto_publish && publishedPost
+                    ? 'Essay generated and published to Ghost'
+                    : 'Essay generated successfully',
+                  essay: {
+                    title: essay.title,
+                    content: essay.content,
+                    faculty: essay.faculty,
+                    format: essay.format,
+                    length: essay.length,
+                    topic: essay.topic,
+                    word_count: essay.word_count,
+                  },
+                  published: auto_publish && publishedPost ? {
+                    post_id: publishedPost.id,
+                    slug: publishedPost.slug,
+                    url: publishedPost.url,
+                    status: publishedPost.status,
+                  } : null,
+                  metadata: response.data.metadata,
+                }, null, 2),
+              },
+            ],
+          };
+        } catch (error) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  error: 'Failed to generate essay',
+                  message: error.message,
+                  details: error.response?.data || error.stack,
+                }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
       }
 
       default:
