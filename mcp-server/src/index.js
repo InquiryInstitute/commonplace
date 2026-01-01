@@ -441,7 +441,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           properties: {
             faculty_lastname: {
               type: 'string',
-              description: 'Last name of faculty member (e.g., "arendt", "marx", "austen")',
+              description: 'Last name of faculty member (e.g., "locke", "arendt", "marx", "austen")',
             },
             topic: {
               type: 'string',
@@ -469,15 +469,37 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
             auto_publish: {
               type: 'boolean',
-              description: 'Automatically publish to Ghost after generation (default: false)',
+              description: 'Automatically publish to Ghost after generation (default: false). If true and no author_email, uses persona account (e.g., a.locke@inquiry.institute)',
               default: false,
             },
             author_email: {
               type: 'string',
-              description: 'Email of author to attribute the essay to (required if auto_publish is true)',
+              description: 'Email of author to attribute the essay to (optional - defaults to persona account if auto_publish is true)',
             },
           },
           required: ['faculty_lastname', 'topic'],
+        },
+      },
+      {
+        name: 'create_persona_account',
+        description: 'Create a Ghost account for a faculty persona (e.g., a.locke@inquiry.institute for John Locke). Personas can publish essays and comment.',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            faculty_lastname: {
+              type: 'string',
+              description: 'Last name of faculty (e.g., "locke", "arendt", "marx", "austen")',
+            },
+            full_name: {
+              type: 'string',
+              description: 'Full name for display (e.g., "John Locke")',
+            },
+            bio: {
+              type: 'string',
+              description: 'Bio/description for the persona account',
+            },
+          },
+          required: ['faculty_lastname', 'full_name'],
         },
       },
     ],
@@ -1611,6 +1633,98 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             isError: true,
           };
         }
+      }
+
+      case 'create_persona_account': {
+        const { faculty_lastname, full_name, bio } = args;
+        
+        // Map to persona email
+        const personaEmails = {
+          'locke': 'a.locke@inquiry.institute',
+          'arendt': 'h.arendt@inquiry.institute',
+          'marx': 'k.marx@inquiry.institute',
+          'austen': 'j.austen@inquiry.institute',
+        };
+        
+        const email = personaEmails[faculty_lastname.toLowerCase()];
+        if (!email) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  error: 'Unknown persona',
+                  message: `No persona email mapping for '${faculty_lastname}'. Available: ${Object.keys(personaEmails).join(', ')}`,
+                }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        // Check if account exists
+        const checkResult = await ghostRequest('GET', `/users/?filter=email:'${email}'`);
+        if (checkResult.success && checkResult.data?.users?.length > 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  message: 'Persona account already exists',
+                  user: checkResult.data.users[0],
+                }, null, 2),
+              },
+            ],
+          };
+        }
+        
+        // Create account
+        const defaultBio = bio || `Content generated in the persona of ${full_name} using AI.`;
+        const createResult = await ghostRequest('POST', '/users/', {
+          users: [{
+            name: full_name,
+            email: email,
+            roles: ['Author'],
+            bio: defaultBio,
+            status: 'active',
+          }],
+        });
+        
+        if (!createResult.success) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: JSON.stringify({
+                  error: 'Failed to create persona account',
+                  details: createResult.error,
+                }, null, 2),
+              },
+            ],
+            isError: true,
+          };
+        }
+        
+        const user = createResult.data.users[0];
+        return {
+          content: [
+            {
+              type: 'text',
+              text: JSON.stringify({
+                success: true,
+                message: `Persona account created for ${full_name}`,
+                user: {
+                  id: user.id,
+                  name: user.name,
+                  email: user.email,
+                  role: user.roles?.[0]?.name,
+                  status: user.status,
+                },
+                note: 'This account can now publish essays and comment. It is a persona account for AI-generated content.',
+              }, null, 2),
+            },
+          ],
+        };
       }
 
       default:
