@@ -1469,24 +1469,37 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           // If auto_publish is enabled, publish to Ghost
           let publishedPost = null;
           if (auto_publish) {
-            if (!author_email) {
-              return {
-                content: [
-                  {
-                    type: 'text',
-                    text: JSON.stringify({
-                      error: 'author_email required',
-                      message: 'author_email is required when auto_publish is true',
-                      essay: essay, // Return essay even if publish fails
-                    }, null, 2),
-                  },
-                ],
-                isError: true,
+            // Default to persona account if no author_email provided
+            let authorEmail = author_email;
+            if (!authorEmail) {
+              // Map faculty lastname to persona email
+              const personaEmails = {
+                'locke': 'a.locke@inquiry.institute',
+                'arendt': 'h.arendt@inquiry.institute',
+                'marx': 'k.marx@inquiry.institute',
+                'austen': 'j.austen@inquiry.institute',
               };
+              authorEmail = personaEmails[faculty_lastname.toLowerCase()] || null;
+              
+              if (!authorEmail) {
+                return {
+                  content: [
+                    {
+                      type: 'text',
+                      text: JSON.stringify({
+                        error: 'author_email required',
+                        message: `author_email is required when auto_publish is true, or faculty '${faculty_lastname}' needs a persona account`,
+                        essay: essay,
+                      }, null, 2),
+                    },
+                  ],
+                  isError: true,
+                };
+              }
             }
 
             // Get author ID
-            const authorResult = await ghostRequest('GET', `/users/?filter=email:'${author_email}'`);
+            const authorResult = await ghostRequest('GET', `/users/?filter=email:'${authorEmail}'`);
             if (!authorResult.success || !authorResult.data?.users?.length) {
               return {
                 content: [
@@ -1494,8 +1507,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                     type: 'text',
                     text: JSON.stringify({
                       error: 'Author not found',
-                      message: `No user found with email: ${author_email}`,
-                      essay: essay, // Return essay even if publish fails
+                      message: `No user found with email: ${authorEmail}. Create the persona account first using create_faculty_account or create-persona-accounts.sh`,
+                      essay: essay,
                     }, null, 2),
                   },
                 ],
