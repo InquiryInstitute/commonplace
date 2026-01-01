@@ -71,6 +71,21 @@ const FACULTY_PERSONAS: Record<string, FacultyPersona> = {
       'Narrative precision'
     ]
   },
+  'locke': {
+    name: 'John',
+    lastname: 'Locke',
+    style: 'Empiricist, clear and methodical, focused on understanding through experience and reason',
+    themes: ['knowledge', 'education', 'experience', 'reason', 'liberty', 'property', 'government'],
+    writing_characteristics: [
+      'Clear, methodical prose',
+      'Empirical approach to knowledge',
+      'Focus on experience as source of understanding',
+      'Systematic organization of ideas',
+      'Emphasis on education and learning',
+      'Practical philosophy',
+      'Advocacy for liberty and individual rights'
+    ]
+  },
   // Add more faculty personas as needed
 }
 
@@ -87,6 +102,22 @@ serve(async (req) => {
     })
   }
 
+  // Skip JWT verification - allow requests with apikey header
+  // The function will be called from MCP server which has the key
+  const apikey = req.headers.get('apikey')
+  const authHeader = req.headers.get('authorization')
+  
+  // Accept either apikey header or authorization header
+  if (!apikey && !authHeader) {
+    return new Response(
+      JSON.stringify({ error: 'Missing authorization' }),
+      {
+        status: 401,
+        headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
+      }
+    )
+  }
+  
   try {
     const requestData: EssayRequest = await req.json()
 
@@ -157,8 +188,8 @@ Generate the ${format} now:`
       )
     }
 
-    // Use a high-quality model via OpenRouter (default to Claude Sonnet or GPT-4)
-    const model = 'anthropic/claude-3.5-sonnet' // or 'openai/gpt-4-turbo'
+    // Use model from environment or default to free model
+    const model = Deno.env.get('OPENROUTER_MODEL') || 'gpt-oss-120b:free'
 
     const openrouterResponse = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
